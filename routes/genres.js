@@ -1,32 +1,71 @@
-const Joi = require('joi');
+const {Genre, validateInput} = require('../models/genres');
+const mongoose = require('mongoose');
 const express = require('express');
 const router = express.Router();
 
-const genres = [
-    {id:1, movie: 'Jackie Chan',genre: 'Action'},
-    {id:2, movie: 'Harry potter', genre: 'Adventure'},
-    {id:3, movie: 'Mr Bean', genre: 'Comedy'},
-    {id:4, movie: 'Choli Soccer', genre: 'Fantasy'},
-    {id:5, movie: 'Vampire Diary', genre: 'Horror'}
-];
-
-function validateInput(movie, genre){
-    const schema = Joi.object({
-        movie: Joi.string().min(3).max(30).required(),
-        genre: Joi.string().min(3).max(30).required()
+async function createGenre(movie, genre){
+    //create an object based on the class
+    const genres = new Genre({
+        movie: movie,
+        genre: genre
     });
-
-    return schema.validate({ movie: movie, genre: genre });
+    
+    //save to database
+    try {
+        // await course.validate();
+        const result = await genres.save();
+        // console.log(result);
+    } catch (ex) {
+        // console.log(ex.message);
+        for (let field in ex.errors)
+            res.send(ex.errors[field].properties.message);
+    }
 }
 
-router.get('/', (req, res) => {
-    res.send(genres);
+// async function getAllGenre(){
+//     try {
+//         // find all documents
+//         const genres = await Genre.find({});
+//         res.send(genres);
+//     } catch (error) {
+//         console.error(error);
+//     }
+// }
+
+async function getAllGenreById(id){
+    try {
+        // Find the adventure with the given `id`, or `null` if not found
+        const genres = await Genre.findById(id).exec();
+        res.send(genres);
+    } catch (error) {
+        res.status(404).send('The movie genre is not found!!!');
+    }
+}
+
+// const genres = [
+//     {id:1, movie: 'Jackie Chan',genre: 'Action'},
+//     {id:2, movie: 'Harry potter', genre: 'Adventure'},
+//     {id:3, movie: 'Mr Bean', genre: 'Comedy'},
+//     {id:4, movie: 'Choli Soccer', genre: 'Fantasy'},
+//     {id:5, movie: 'Vampire Diary', genre: 'Horror'}
+// ];
+
+router.get('/', async (req, res) => {
+    try {
+        // find all documents
+        const genres = await Genre.find({}).select('movie genre');
+        res.send(genres);
+    } catch (error) {
+        console.error(error);
+    }
 });
 
 router.get('/:id', (req, res) => {
-    const genre = genres.find(el => el.id === parseInt(req.params.id));
-    if(!genre) return res.status(404).send('The movie genre is not found');
-    res.send(genre);
+    
+    getAllGenreById(req.params.id);
+    // const genre = genres.find(el => el.id === parseInt(req.params.id));
+    // if(!genre) return res.status(404).send('The movie genre is not found');
+    // res.send(genre);
 });
 
 router.post('/', (req, res) => {
@@ -36,17 +75,20 @@ router.post('/', (req, res) => {
     
     //creating the new post
     const genre = {
-        id: genres.length +1,
+        // id: genres.length +1,
         movie: req.body.movie,
         genre: req.body.genre
     };
 
+    createGenre(genre.movie, genre.genre);
     //push the new post to the genre array
-    genres.push(genre);
-    res.send(genre);
+    // genres.push(genre);
+    res.send('Sucessfully added!!!');
 });
 
 router.put('/:id', (req, res) => {
+    // Genre.findByIdAndUpdate(req.params.id, {na})
+
     const genre = genres.find(el => el.id === parseInt(req.params.id));
     if(!genre) return res.status(404).send('The movie genre is not found');
 
@@ -59,14 +101,14 @@ router.put('/:id', (req, res) => {
     res.send(genre);
 });
 
-router.delete('/:id', (req, res) => {
-    const genre = genres.find(el => el.id === parseInt(req.params.id));
+router.delete('/:id', async (req, res) => {
+    const genre = await Genre.findByIdAndRemove(req.params.id);
+
+    // const genre = genres.find(el => el.id === parseInt(req.params.id));
     if(!genre) return res.status(404).send('The movie genre is not found');
-
-    const index = genres.indexOf(genre);
-    genres.splice(index, 1);
-
-    res.send(genres);
+    // const index = genres.indexOf(genre);
+    // genres.splice(index, 1);
+    res.send(genre);
 });
 
 module.exports = router;
