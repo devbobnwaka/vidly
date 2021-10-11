@@ -1,3 +1,4 @@
+const auth = require('../middleware/auth');
 const {Rental, validate} = require('../models/rentals'); 
 const {Movie} = require('../models/movies'); 
 const {Customer} = require('../models/customer'); 
@@ -11,10 +12,10 @@ router.get('/', async (req, res) => {
     res.send(rentals);
 });
 
-router.post('/', async (req, res) => {
+router.post('/', auth, async (req, res) => {
 
       const {value, error} = await validate(req.body.customerId, req.body.movieId); 
-      if(error) return res.status(400).send("Bad request!!!");
+      if(error) return res.status(400).send(error.details[0].message);
       
       const customer = await Customer.findById(value.customerId);
       if (!customer) return res.status(400).send('Invalid customer.');

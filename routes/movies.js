@@ -1,9 +1,10 @@
+const auth = require('../middleware/auth');
 const {Movie, GenreMovie, validate, createMovie} = require('../models/movies');
 const mongoose = require('mongoose');
 const express = require('express');
 const router = express.Router();
 
-router.post('/', async (req, res)=>{
+router.post('/', auth, async (req, res)=>{
     try{
         const value = await validate(req.body.title, req.body.numberInStock, req.body.dailyRentalRate, req.body.genreName);
 

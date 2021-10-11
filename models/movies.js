@@ -52,14 +52,14 @@ function validateInput(title, numberInStock, dailyRentalRate, genreName){
 }
 
 async function createMovie(title, numberInStock, dailyRentalRate, genre){
-    const movies = new Movie ({
+    const movie = new Movie ({
         title,
         genre,
         numberInStock,
         dailyRentalRate
     });
 
-    const result = await movies.save();
+    const result = await movie.save();
     return result;
 }
 

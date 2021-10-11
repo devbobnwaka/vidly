@@ -1,3 +1,6 @@
+const asyncMiddleware = require('../middleware/async');
+const auth = require('../middleware/auth');
+const admin = require('../middleware/admin');
 const {Genre, validateInput} = require('../models/genres');
 const mongoose = require('mongoose');
 const express = require('express');
@@ -51,13 +54,9 @@ async function getAllGenreById(id){
 // ];
 
 router.get('/', async (req, res) => {
-    try {
-        // find all documents
+        // throw new Error('Could not get the genre!!!');
         const genres = await Genre.find({}).select('movie genre');
         res.send(genres);
-    } catch (error) {
-        console.error(error);
-    }
 });
 
 router.get('/:id', (req, res) => {
@@ -68,22 +67,23 @@ router.get('/:id', (req, res) => {
     // res.send(genre);
 });
 
-router.post('/', (req, res) => {
-    const {error, value} = validateInput(req.body.movie, req.body.genre);
-    if(error) return res.status(400).send('Fill the fields correctly');
-    // console.log(error.details[0].message);
-    
-    //creating the new post
-    const genre = {
-        // id: genres.length +1,
-        movie: req.body.movie,
-        genre: req.body.genre
-    };
 
-    createGenre(genre.movie, genre.genre);
-    //push the new post to the genre array
-    // genres.push(genre);
-    res.send('Sucessfully added!!!');
+router.post('/', auth, (req, res) => {
+        const {error, value} = validateInput(req.body.movie, req.body.genre);
+        if(error) return res.status(400).send('Fill the fields correctly');
+        // console.log(error.details[0].message);
+        
+        //creating the new post
+        const genre = {
+            // id: genres.length +1,
+            movie: req.body.movie,
+            genre: req.body.genre
+        };
+    
+        createGenre(genre.movie, genre.genre);
+        //push the new post to the genre array
+        // genres.push(genre);
+        res.send('Sucessfully added!!!');
 });
 
 router.put('/:id', (req, res) => {
@@ -101,7 +101,7 @@ router.put('/:id', (req, res) => {
     res.send(genre);
 });
 
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', [auth, admin], async (req, res) => {
     const genre = await Genre.findByIdAndRemove(req.params.id);
 
     // const genre = genres.find(el => el.id === parseInt(req.params.id));
